@@ -1,15 +1,15 @@
-import * as THREE from "./build/three.module.js";
+/* import * as THREE from "./build/three.module.js";
+import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+import { ARButton } from "./jsm/webxr/ARButton.js";
+// Import the necessary loaders
+import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
+ */
+import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.min.js";
 import { OrbitControls } from "./jsm/controls/OrbitControls.js";
 import { ARButton } from "./jsm/webxr/ARButton.js";
 // Import the necessary loaders
 import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
 
-/* 
-import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { ARButton } from "./jsm/webxr/ARButton.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
- */
 let container;
 let camera, scene, renderer;
 let controller1, controller2;
