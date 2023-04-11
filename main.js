@@ -4,7 +4,7 @@ import { ARButton } from "./jsm/webxr/ARButton.js";
 // Import the necessary loaders
 import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
  */
-import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.min.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js";
 import { OrbitControls } from "./jsm/controls/OrbitControls.js";
 import { ARButton } from "./jsm/webxr/ARButton.js";
 // Import the necessary loaders
