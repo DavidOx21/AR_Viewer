@@ -60,9 +60,9 @@ function init() {
   renderer.xr.enabled = true;
   container.appendChild(renderer.domElement);
 
-  container.addEventListener("touchstart", onTouchStart, false);
-  container.addEventListener("touchmove", onTouchMove, false);
-  container.addEventListener("touchend", onTouchEnd, false);
+  window.addEventListener("touchstart", onTouchStart, false);
+  window.addEventListener("touchmove", onTouchMove, false);
+  window.addEventListener("touchend", onTouchEnd, false);
 
   document.body.appendChild(
     ARButton.createButton(renderer, {
