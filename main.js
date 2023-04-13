@@ -170,6 +170,6 @@ function animate() {
 
 function render() {
   //cleanIntersected();
-
+  isARMode = renderer.xr.isPresenting;
   renderer.render(scene, camera);
 }
