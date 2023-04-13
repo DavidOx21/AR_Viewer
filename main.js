@@ -11,6 +11,7 @@ let initialScale;
 let initialRotation;
 let touchMode;
 let initialTouchPosition;
+let isARMode = false;
 
 const loader = new GLTFLoader();
 
@@ -63,7 +64,16 @@ function init() {
   container.addEventListener("touchmove", onTouchMove, false);
   container.addEventListener("touchend", onTouchEnd, false);
 
-  document.body.appendChild(ARButton.createButton(renderer));
+  document.body.appendChild(
+    ARButton.createButton(renderer, {
+      onSessionStart: () => {
+        isARMode = true;
+      },
+      onSessionEnd: () => {
+        isARMode = false;
+      },
+    })
+  );
 
   window.addEventListener("resize", onWindowResize);
 }
@@ -75,6 +85,7 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 function onTouchStart(event) {
+  if (!isARMode) return;
   event.preventDefault();
 
   if (event.touches.length === 1) {
@@ -96,6 +107,7 @@ function onTouchStart(event) {
 }
 
 function onTouchMove(event) {
+  if (!isARMode) return;
   event.preventDefault();
   if (selectedObject && touchMode === "move") {
     const touch = event.touches[0];
