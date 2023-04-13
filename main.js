@@ -1,14 +1,13 @@
-/* import * as THREE from "./build/three.module.js";
+import * as THREE from "./build/three.module.js";
 import { OrbitControls } from "./jsm/controls/OrbitControls.js";
 import { ARButton } from "./jsm/webxr/ARButton.js";
-// Import the necessary loaders
+import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
+
+/* import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js";
+import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+import { ARButton } from "./jsm/webxr/ARButton.js";
 import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
  */
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js";
-import { OrbitControls } from "./jsm/controls/OrbitControls.js";
-import { ARButton } from "./jsm/webxr/ARButton.js";
-// Import the necessary loaders
-import { GLTFLoader } from "./jsm/loaders/GLTFLoader.js";
 
 let container;
 let camera, scene, renderer;
@@ -89,7 +88,10 @@ function init() {
     // Get the loaded model
     const model = gltf.scene;
 
-    // Do something with the loaded model, such as adding it to the scene
+    // Scale down the model by 50%
+    model.scale.set(0.01, 0.01, 0.01);
+
+    // Add the model to the scene
     scene.add(model);
   });
 
