@@ -20,10 +20,6 @@ init();
 animate();
 
 function init() {
-  renderer.domElement.addEventListener("touchstart", onTouchStart, false);
-  renderer.domElement.addEventListener("touchmove", onTouchMove, false);
-  renderer.domElement.addEventListener("touchend", onTouchEnd, false);
-
   container = document.createElement("div");
   document.body.appendChild(container);
 
@@ -53,7 +49,7 @@ function init() {
   loader.load("./models/model.gltf", function (gltf) {
     const model = gltf.scene;
     model.scale.set(0.01, 0.01, 0.01);
-    scene.add(model);
+    group.add(model);
   });
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -62,6 +58,10 @@ function init() {
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.xr.enabled = true;
   container.appendChild(renderer.domElement);
+
+  container.addEventListener("touchstart", onTouchStart, false);
+  container.addEventListener("touchmove", onTouchMove, false);
+  container.addEventListener("touchend", onTouchEnd, false);
 
   document.body.appendChild(ARButton.createButton(renderer));
 
@@ -157,5 +157,7 @@ function animate() {
 }
 
 function render() {
+  //cleanIntersected();
+
   renderer.render(scene, camera);
 }
