@@ -89,7 +89,7 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 function onTouchStart(event) {
-  if (!isARMode) return;
+  if (!renderer.xr.isPresenting) return;
   event.preventDefault();
 
   if (event.touches.length === 1) {
@@ -111,7 +111,7 @@ function onTouchStart(event) {
 }
 
 function onTouchMove(event) {
-  if (!isARMode) return;
+  if (!renderer.xr.isPresenting) return;
   event.preventDefault();
   if (selectedObject && touchMode === "move") {
     const touch = event.touches[0];
@@ -164,6 +164,7 @@ function onTouchMove(event) {
 
 function onTouchEnd(event) {
   event.preventDefault();
+  if (!renderer.xr.isPresenting) return;
   touchMode = null;
   selectedObject = null;
 }
