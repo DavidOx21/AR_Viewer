@@ -60,9 +60,9 @@ function init() {
   renderer.xr.enabled = true;
   container.appendChild(renderer.domElement);
 
-  renderer.domElement.addEventListener("touchstart", onTouchStart, false);
-  renderer.domElement.addEventListener("touchmove", onTouchMove, false);
-  renderer.domElement.addEventListener("touchend", onTouchEnd, false);
+  //renderer.domElement.addEventListener("touchstart", onTouchStart, false);
+  //renderer.domElement.addEventListener("touchmove", onTouchMove, false);
+  //renderer.domElement.addEventListener("touchend", onTouchEnd, false);
 
   //window.addEventListener("touchstart", onTouchStart, false);
   //window.addEventListener("touchmove", onTouchMove, false);
