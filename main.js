@@ -163,8 +163,9 @@ function onTouchMove(event) {
 }
 
 function onTouchEnd(event) {
-  event.preventDefault();
   if (!renderer.xr.isPresenting) return;
+  event.preventDefault();
+
   touchMode = null;
   selectedObject = null;
 }
