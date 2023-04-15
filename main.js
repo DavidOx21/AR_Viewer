@@ -47,12 +47,12 @@ function init() {
   group = new THREE.Group();
   scene.add(group);
 
-  /* loader.load("./models/model.gltf", function (gltf) {
+  loader.load("./models/model.gltf", function (gltf) {
     const model = gltf.scene;
     model.scale.set(0.01, 0.01, 0.01);
     group.add(model);
   });
- */
+
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
