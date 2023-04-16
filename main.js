@@ -126,7 +126,7 @@ function onTouchStart(event) {
 
     previousTouchDist = touch1.clientX - touch2.clientX;
     initialScale = pivot.scale.x;
-    initialRotation = pivot.rotation.z;
+    initialRotation = pivot.rotation.y;
   }
 }
 
@@ -142,8 +142,8 @@ function onTouchMove(event) {
       touch.clientY - initialTouchPosition.y
     );
 
-    const deltaAngle = (deltaPosition.x / window.innerWidth) * Math.PI; // Reduce sensitivity by changing the multiplier
-    pivot.rotation.y = initialRotation - deltaAngle;
+    const angle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
+    pivot.rotation.y = initialRotation - angle * 0.5; // Reduce sensitivity
     initialTouchPosition.set(touch.clientX, touch.clientY);
   } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
     const touch1 = event.touches[0];
@@ -162,29 +162,27 @@ function onTouchMove(event) {
     );
 
     // Moving the model in AR
-    if (Math.abs(touch1.clientX - touch2.clientX) > 30) {
-      const midX = (touch1.clientX + touch2.clientX) / 2;
-      const midY = (touch1.clientY + touch2.clientY) / 2;
-      const deltaPosition = new THREE.Vector2(
-        initialTouchPosition.x - midX,
-        initialTouchPosition.y - midY
-      );
+    const midX = (touch1.clientX + touch2.clientX) / 2;
+    const midY = (touch1.clientY + touch2.clientY) / 2;
+    const deltaPosition = new THREE.Vector2(
+      initialTouchPosition.x - midX,
+      initialTouchPosition.y - midY
+    );
 
-      const screenDelta = new THREE.Vector3(
-        (deltaPosition.x / window.innerWidth) * 2,
-        (-deltaPosition.y / window.innerHeight) * 2,
-        0
-      );
+    const screenDelta = new THREE.Vector3(
+      (deltaPosition.x / window.innerWidth) * 2,
+      (-deltaPosition.y / window.innerHeight) * 2,
+      0
+    );
 
-      const worldDelta = screenDelta
-        .clone()
-        .unproject(camera)
-        .sub(camera.position)
-        .normalize()
-        .multiplyScalar(camera.position.z);
-      pivot.position.add(worldDelta);
-      initialTouchPosition.set(midX, midY);
-    }
+    const worldDelta = screenDelta
+      .clone()
+      .unproject(camera)
+      .sub(camera.position)
+      .normalize()
+      .multiplyScalar(camera.position.z * 0.5); // Reduce sensitivity
+    pivot.position.add(worldDelta);
+    initialTouchPosition.set(midX, midY);
   }
 }
 
