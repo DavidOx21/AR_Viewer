@@ -48,23 +48,29 @@ function init() {
   group = new THREE.Group();
   scene.add(group);
 
-  loader.load("./models/model.gltf", function (gltf) {
-    const model = gltf.scene;
-    model.scale.set(0.01, 0.01, 0.01);
+  loader.load(
+    "./models/model.gltf",
+    function (gltf) {
+      const model = gltf.scene;
+      model.scale.set(0.01, 0.01, 0.01);
+      group.add(model);
 
-    // Compute the center of the model's bounding box
-    model.traverse(function (child) {
-      if (child.isMesh) {
-        child.geometry.computeBoundingBox();
-        child.geometry.boundingBox.getCenter(model.position);
-      }
-    });
+      // Compute the center of the model's bounding box
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
 
-    // Create the pivot point using the center of the bounding box
-    pivot = new THREE.Object3D();
-    pivot.add(model);
-    group.add(pivot);
-  });
+      // Create the pivot point using the center of the bounding box
+      pivot = new THREE.Object3D();
+      pivot.position.copy(center);
+      group.add(pivot);
+      pivot.attach(model);
+      model.position.sub(center);
+    },
+    undefined,
+    function (error) {
+      console.error("An error occurred while loading the model: ", error);
+    }
+  );
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -128,7 +134,7 @@ function onTouchMove(event) {
   if (!renderer.xr.isPresenting) return;
   event.preventDefault();
 
-  if (touchMode === "rotate" && event.touches.length === 1) {
+  if (touchMode === "move" && event.touches.length === 1) {
     const touch = event.touches[0];
 
     const deltaPosition = new THREE.Vector2(
@@ -139,44 +145,15 @@ function onTouchMove(event) {
     const deltaAngle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
     pivot.rotation.y = initialRotation - deltaAngle;
     initialTouchPosition.set(touch.clientX, touch.clientY);
-  } else if (
-    selectedObject &&
-    touchMode === "move" &&
-    event.touches.length === 2
-  ) {
-    const touch1 = event.touches[0];
-    const touch2 = event.touches[1];
-
-    initialTouchPosition.set(
-      (touch1.clientX + touch2.clientX) / 2,
-      (touch1.clientY + touch2.clientY) / 2
-    );
-
-    const deltaPosition = new THREE.Vector2(
-      initialTouchPosition.x - touch.clientX,
-      initialTouchPosition.y - touch.clientY
-    );
-
-    const screenDelta = new THREE.Vector3(
-      (deltaPosition.x / window.innerWidth) * 2,
-      (-deltaPosition.y / window.innerHeight) * 2,
-      0
-    );
-
-    const worldDelta = screenDelta
-      .clone()
-      .unproject(camera)
-      .sub(camera.position)
-      .normalize()
-      .multiplyScalar(camera.position.z);
-    pivot.position.add(worldDelta);
-    initialTouchPosition.set(touch.clientX, touch.clientY);
   } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
 
     // Scaling
-    const currentTouchDist = touch1.clientX - touch2.clientX;
+    const currentTouchDist = Math.hypot(
+      touch1.clientX - touch2.clientX,
+      touch1.clientY - touch2.clientY
+    );
     const scaleFactor = currentTouchDist / previousTouchDist;
     pivot.scale.set(
       initialScale * scaleFactor,
@@ -184,17 +161,33 @@ function onTouchMove(event) {
       initialScale * scaleFactor
     );
 
-    // Rotation
-    const initialAngle = Math.atan2(
-      touch1.clientX - touch2.clientX,
-      touch1.clientY - touch2.clientY
-    );
-    const currentAngle = Math.atan2(
-      touch1.clientX - touch2.clientX,
-      touch1.clientY - touch2.clientY
-    );
-    const deltaAngle = initialAngle - currentAngle;
-    pivot.rotation.y = initialRotation - deltaAngle;
+    // Moving the model in AR
+    if (Math.abs(touch1.clientX - touch2.clientX) > 30) {
+      initialTouchPosition.set(
+        (touch1.clientX + touch2.clientX) / 2,
+        (touch1.clientY + touch2.clientY) / 2
+      );
+
+      const deltaPosition = new THREE.Vector2(
+        initialTouchPosition.x - touch1.clientX,
+        initialTouchPosition.y - touch1.clientY
+      );
+
+      const screenDelta = new THREE.Vector3(
+        (deltaPosition.x / window.innerWidth) * 2,
+        (-deltaPosition.y / window.innerHeight) * 2,
+        0
+      );
+
+      const worldDelta = screenDelta
+        .clone()
+        .unproject(camera)
+        .sub(camera.position)
+        .normalize()
+        .multiplyScalar(camera.position.z);
+      pivot.position.add(worldDelta);
+      initialTouchPosition.set(touch1.clientX, touch1.clientY);
+    }
   }
 }
 
