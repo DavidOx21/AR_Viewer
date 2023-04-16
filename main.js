@@ -11,6 +11,7 @@ let initialScale;
 let initialRotation;
 let touchMode;
 let initialTouchPosition;
+let pivot;
 let isARMode = false;
 
 const loader = new GLTFLoader();
@@ -50,7 +51,19 @@ function init() {
   loader.load("./models/model.gltf", function (gltf) {
     const model = gltf.scene;
     model.scale.set(0.01, 0.01, 0.01);
-    group.add(model);
+
+    // Compute the center of the model's bounding box
+    model.traverse(function (child) {
+      if (child.isMesh) {
+        child.geometry.computeBoundingBox();
+        child.geometry.boundingBox.getCenter(model.position);
+      }
+    });
+
+    // Create the pivot point using the center of the bounding box
+    pivot = new THREE.Object3D();
+    pivot.add(model);
+    group.add(pivot);
   });
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -175,15 +188,15 @@ function onTouchMove(event) {
 
     // Rotation
     const initialAngle = Math.atan2(
-      touch1.clientY - touch2.clientY,
-      touch1.clientX - touch2.clientX
+      touch1.clientX - touch2.clientX,
+      touch1.clientY - touch2.clientY
     );
     const currentAngle = Math.atan2(
-      touch1.clientY - touch2.clientY,
-      touch1.clientX - touch2.clientX
+      touch1.clientX - touch2.clientX,
+      touch1.clientY - touch2.clientY
     );
     const deltaAngle = initialAngle - currentAngle;
-    group.rotation.z = initialRotation - deltaAngle;
+    pivot.rotation.y = initialRotation - deltaAngle;
   }
 }
 
