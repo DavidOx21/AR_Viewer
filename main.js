@@ -142,7 +142,7 @@ function onTouchMove(event) {
       touch.clientY - initialTouchPosition.y
     );
 
-    const deltaAngle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
+    const deltaAngle = (deltaPosition.x / window.innerWidth) * Math.PI; // Reduce sensitivity by changing the multiplier
     pivot.rotation.y = initialRotation - deltaAngle;
     initialTouchPosition.set(touch.clientX, touch.clientY);
   } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
@@ -163,14 +163,11 @@ function onTouchMove(event) {
 
     // Moving the model in AR
     if (Math.abs(touch1.clientX - touch2.clientX) > 30) {
-      initialTouchPosition.set(
-        (touch1.clientX + touch2.clientX) / 2,
-        (touch1.clientY + touch2.clientY) / 2
-      );
-
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
       const deltaPosition = new THREE.Vector2(
-        initialTouchPosition.x - touch1.clientX,
-        initialTouchPosition.y - touch1.clientY
+        initialTouchPosition.x - midX,
+        initialTouchPosition.y - midY
       );
 
       const screenDelta = new THREE.Vector3(
@@ -186,7 +183,7 @@ function onTouchMove(event) {
         .normalize()
         .multiplyScalar(camera.position.z);
       pivot.position.add(worldDelta);
-      initialTouchPosition.set(touch1.clientX, touch1.clientY);
+      initialTouchPosition.set(midX, midY);
     }
   }
 }
