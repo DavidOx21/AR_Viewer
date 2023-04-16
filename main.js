@@ -101,6 +101,7 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
 function onTouchStart(event) {
   if (!renderer.xr.isPresenting) return;
   event.preventDefault();
@@ -108,21 +109,18 @@ function onTouchStart(event) {
   if (event.touches.length === 1) {
     const touch = event.touches[0];
     initialTouchPosition = new THREE.Vector2(touch.clientX, touch.clientY);
-    touchMode = "rotate";
+    selectedObject = pivot.children[0]; // Assumes there is only one child in the pivot
+    touchMode = "move";
   } else if (event.touches.length === 2) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
 
-    initialTouchPosition = new THREE.Vector2(
-      (touch1.clientX + touch2.clientX) / 2,
-      (touch1.clientY + touch2.clientY) / 2
-    );
-    selectedObject = group.children[0]; // Assumes there is only one child in the group
-    touchMode = "move";
+    selectedObject = null;
+    touchMode = "scale-rotate";
 
     previousTouchDist = touch1.clientX - touch2.clientX;
-    initialScale = group.scale.x;
-    initialRotation = group.rotation.y; // Changed to Y axis
+    initialScale = pivot.scale.x;
+    initialRotation = pivot.rotation.z;
   }
 }
 
@@ -139,7 +137,7 @@ function onTouchMove(event) {
     );
 
     const deltaAngle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
-    group.rotation.y = initialRotation - deltaAngle;
+    pivot.rotation.y = initialRotation - deltaAngle;
     initialTouchPosition.set(touch.clientX, touch.clientY);
   } else if (
     selectedObject &&
@@ -171,7 +169,7 @@ function onTouchMove(event) {
       .sub(camera.position)
       .normalize()
       .multiplyScalar(camera.position.z);
-    selectedObject.position.add(worldDelta);
+    pivot.position.add(worldDelta);
     initialTouchPosition.set(touch.clientX, touch.clientY);
   } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
     const touch1 = event.touches[0];
@@ -180,7 +178,7 @@ function onTouchMove(event) {
     // Scaling
     const currentTouchDist = touch1.clientX - touch2.clientX;
     const scaleFactor = currentTouchDist / previousTouchDist;
-    group.scale.set(
+    pivot.scale.set(
       initialScale * scaleFactor,
       initialScale * scaleFactor,
       initialScale * scaleFactor
