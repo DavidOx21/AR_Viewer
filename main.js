@@ -95,30 +95,55 @@ function onTouchStart(event) {
   if (event.touches.length === 1) {
     const touch = event.touches[0];
     initialTouchPosition = new THREE.Vector2(touch.clientX, touch.clientY);
-    selectedObject = group.children[0]; // Assumes there is only one child in the group
-    touchMode = "move";
+    touchMode = "rotate";
   } else if (event.touches.length === 2) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
 
-    selectedObject = null;
-    touchMode = "scale-rotate";
+    initialTouchPosition = new THREE.Vector2(
+      (touch1.clientX + touch2.clientX) / 2,
+      (touch1.clientY + touch2.clientY) / 2
+    );
+    selectedObject = group.children[0]; // Assumes there is only one child in the group
+    touchMode = "move";
 
     previousTouchDist = touch1.clientX - touch2.clientX;
     initialScale = group.scale.x;
-    initialRotation = group.rotation.z;
+    initialRotation = group.rotation.y; // Changed to Y axis
   }
 }
 
 function onTouchMove(event) {
   if (!renderer.xr.isPresenting) return;
   event.preventDefault();
-  if (selectedObject && touchMode === "move") {
+
+  if (touchMode === "rotate" && event.touches.length === 1) {
     const touch = event.touches[0];
 
     const deltaPosition = new THREE.Vector2(
       touch.clientX - initialTouchPosition.x,
       touch.clientY - initialTouchPosition.y
+    );
+
+    const deltaAngle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
+    group.rotation.y = initialRotation - deltaAngle;
+    initialTouchPosition.set(touch.clientX, touch.clientY);
+  } else if (
+    selectedObject &&
+    touchMode === "move" &&
+    event.touches.length === 2
+  ) {
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
+
+    initialTouchPosition.set(
+      (touch1.clientX + touch2.clientX) / 2,
+      (touch1.clientY + touch2.clientY) / 2
+    );
+
+    const deltaPosition = new THREE.Vector2(
+      initialTouchPosition.x - touch.clientX,
+      initialTouchPosition.y - touch.clientY
     );
 
     const screenDelta = new THREE.Vector3(
