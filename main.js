@@ -11,7 +11,6 @@ let initialScale;
 let initialRotation;
 let touchMode;
 let initialTouchPosition;
-let pivot;
 let isARMode = false;
 
 const loader = new GLTFLoader();
@@ -48,29 +47,11 @@ function init() {
   group = new THREE.Group();
   scene.add(group);
 
-  loader.load(
-    "./models/model.gltf",
-    function (gltf) {
-      const model = gltf.scene;
-      model.scale.set(0.01, 0.01, 0.01);
-      group.add(model);
-
-      // Compute the center of the model's bounding box
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-
-      // Create the pivot point using the center of the bounding box
-      pivot = new THREE.Object3D();
-      pivot.position.copy(center);
-      group.add(pivot);
-      pivot.attach(model);
-      model.position.sub(center);
-    },
-    undefined,
-    function (error) {
-      console.error("An error occurred while loading the model: ", error);
-    }
-  );
+  loader.load("./models/model.gltf", function (gltf) {
+    const model = gltf.scene;
+    model.scale.set(0.01, 0.01, 0.01);
+    group.add(model);
+  });
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -91,12 +72,6 @@ function init() {
     ARButton.createButton(renderer, {
       onSessionStart: () => {
         isARMode = true;
-        // Set the initial position of the 3D model in front of the user's view
-        const camera = renderer.xr.getCamera();
-        camera.updateMatrixWorld(true);
-        const position = new THREE.Vector3(0, 0, -2); // 2 units in front of the user
-        position.applyMatrix4(camera.matrixWorld);
-        pivot.position.copy(position);
       },
       onSessionEnd: () => {
         isARMode = false;
@@ -113,7 +88,6 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
 function onTouchStart(event) {
   if (!renderer.xr.isPresenting) return;
   event.preventDefault();
@@ -121,64 +95,30 @@ function onTouchStart(event) {
   if (event.touches.length === 1) {
     const touch = event.touches[0];
     initialTouchPosition = new THREE.Vector2(touch.clientX, touch.clientY);
-    selectedObject = pivot.children[0]; // Assumes there is only one child in the pivot
+    selectedObject = group.children[0]; // Assumes there is only one child in the group
     touchMode = "move";
   } else if (event.touches.length === 2) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
 
-    // Update the initial touch position for the first finger
-    initialTouchPosition = new THREE.Vector2(touch1.clientX, touch1.clientY);
-
     selectedObject = null;
     touchMode = "scale-rotate";
 
-    previousTouchDist = Math.hypot(
-      touch1.clientX - touch2.clientX,
-      touch1.clientY - touch2.clientY
-    );
-    initialScale = pivot.scale.x;
-    initialRotation = pivot.rotation.z;
+    previousTouchDist = touch1.clientX - touch2.clientX;
+    initialScale = group.scale.x;
+    initialRotation = group.rotation.z;
   }
 }
 
 function onTouchMove(event) {
   if (!renderer.xr.isPresenting) return;
   event.preventDefault();
-
-  if (touchMode === "move" && event.touches.length === 1) {
+  if (selectedObject && touchMode === "move") {
     const touch = event.touches[0];
 
     const deltaPosition = new THREE.Vector2(
       touch.clientX - initialTouchPosition.x,
       touch.clientY - initialTouchPosition.y
-    );
-
-    const angle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
-    pivot.rotation.y = initialRotation - angle * 0.1; // Reduce sensitivity
-    initialTouchPosition.set(touch.clientX, touch.clientY);
-  } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
-    const touch1 = event.touches[0];
-    const touch2 = event.touches[1];
-
-    // Scaling
-    const currentTouchDist = Math.hypot(
-      touch1.clientX - touch2.clientX,
-      touch1.clientY - touch2.clientY
-    );
-    const scaleFactor = currentTouchDist / previousTouchDist;
-    pivot.scale.set(
-      initialScale * scaleFactor,
-      initialScale * scaleFactor,
-      initialScale * scaleFactor
-    );
-
-    // Moving the model in AR
-    const midX = (touch1.clientX + touch2.clientX) / 2;
-    const midY = (touch1.clientY + touch2.clientY) / 2;
-    const deltaPosition = new THREE.Vector2(
-      initialTouchPosition.x - midX,
-      initialTouchPosition.y - midY
     );
 
     const screenDelta = new THREE.Vector3(
@@ -193,9 +133,32 @@ function onTouchMove(event) {
       .sub(camera.position)
       .normalize()
       .multiplyScalar(camera.position.z);
-    pivot.position.add(worldDelta);
+    selectedObject.position.add(worldDelta);
+    initialTouchPosition.set(touch.clientX, touch.clientY);
+  } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
+    const touch1 = event.touches[0];
+    const touch2 = event.touches[1];
 
-    initialTouchPosition.set(midX, midY);
+    // Scaling
+    const currentTouchDist = touch1.clientX - touch2.clientX;
+    const scaleFactor = currentTouchDist / previousTouchDist;
+    group.scale.set(
+      initialScale * scaleFactor,
+      initialScale * scaleFactor,
+      initialScale * scaleFactor
+    );
+
+    // Rotation
+    const initialAngle = Math.atan2(
+      touch1.clientY - touch2.clientY,
+      touch1.clientX - touch2.clientX
+    );
+    const currentAngle = Math.atan2(
+      touch1.clientY - touch2.clientY,
+      touch1.clientX - touch2.clientX
+    );
+    const deltaAngle = initialAngle - currentAngle;
+    group.rotation.z = initialRotation - deltaAngle;
   }
 }
 
@@ -212,12 +175,7 @@ function animate() {
 }
 
 function render() {
-  if (isARMode && !group.positionSet) {
-    group.position.copy(camera.position);
-    group.position.z -= 1;
-    group.quaternion.copy(camera.quaternion);
-    group.positionSet = true;
-  }
-
+  //cleanIntersected();
+  isARMode = renderer.xr.isPresenting;
   renderer.render(scene, camera);
 }
