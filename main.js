@@ -127,12 +127,18 @@ function onTouchStart(event) {
     const touch1 = event.touches[0];
     const touch2 = event.touches[1];
 
+    // Update the initial touch position for the first finger
+    initialTouchPosition = new THREE.Vector2(touch1.clientX, touch1.clientY);
+
     selectedObject = null;
     touchMode = "scale-rotate";
 
-    previousTouchDist = touch1.clientX - touch2.clientX;
+    previousTouchDist = Math.hypot(
+      touch1.clientX - touch2.clientX,
+      touch1.clientY - touch2.clientY
+    );
     initialScale = pivot.scale.x;
-    initialRotation = pivot.rotation.y;
+    initialRotation = pivot.rotation.z;
   }
 }
 
@@ -186,8 +192,9 @@ function onTouchMove(event) {
       .unproject(camera)
       .sub(camera.position)
       .normalize()
-      .multiplyScalar(camera.position.z * 0.5); // Reduce sensitivity
+      .multiplyScalar(camera.position.z);
     pivot.position.add(worldDelta);
+
     initialTouchPosition.set(midX, midY);
   }
 }
@@ -205,7 +212,12 @@ function animate() {
 }
 
 function render() {
-  //cleanIntersected();
-  isARMode = renderer.xr.isPresenting;
+  if (isARMode && !group.positionSet) {
+    group.position.copy(camera.position);
+    group.position.z -= 1;
+    group.quaternion.copy(camera.quaternion);
+    group.positionSet = true;
+  }
+
   renderer.render(scene, camera);
 }
