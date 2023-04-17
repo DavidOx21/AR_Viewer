@@ -91,6 +91,12 @@ function init() {
     ARButton.createButton(renderer, {
       onSessionStart: () => {
         isARMode = true;
+        // Set the initial position of the 3D model in front of the user's view
+        const camera = renderer.xr.getCamera();
+        camera.updateMatrixWorld(true);
+        const position = new THREE.Vector3(0, 0, -2); // 2 units in front of the user
+        position.applyMatrix4(camera.matrixWorld);
+        pivot.position.copy(position);
       },
       onSessionEnd: () => {
         isARMode = false;
@@ -143,7 +149,7 @@ function onTouchMove(event) {
     );
 
     const angle = (deltaPosition.x / window.innerWidth) * 2 * Math.PI;
-    pivot.rotation.y = initialRotation - angle * 0.5; // Reduce sensitivity
+    pivot.rotation.y = initialRotation - angle * 0.1; // Reduce sensitivity
     initialTouchPosition.set(touch.clientX, touch.clientY);
   } else if (touchMode === "scale-rotate" && event.touches.length === 2) {
     const touch1 = event.touches[0];
